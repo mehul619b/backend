@@ -53,7 +53,7 @@ def login():
 
 @app.route('/protected',methods=['GET'])
 @token_required
-@limiter.limit("3/minute")
+@limiter.limit("3 per minute")
 def protected():
     return jsonify({'message':'THIS IS A PROTECTED METHOD'})
 
