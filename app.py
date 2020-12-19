@@ -47,7 +47,7 @@ def f():
 def login():
     req_data=request.get_json()
     if req_data['user']=="admin" and req_data['password']=="test":
-        token=jwt.encode({"user":"admin",'exp':datetime.datetime.utcnow()+datetime.timedelta(seconds=5)},app.config["SECRET_KEY"])
+        token=jwt.encode({"user":"admin",'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=30)},app.config["SECRET_KEY"])
         return jsonify({'token':token.decode("UTF-8")})
     return jsonify({'message':'USERNAME OR PASSWORD INVALID'})
 
