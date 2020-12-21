@@ -1,17 +1,18 @@
 ######IMPORTS######
-from flask import Flask,request,jsonify
+from flask import Flask,request,jsonify,render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import json,jwt
 from flask_cors import cross_origin
 from functools import wraps
-import datetime
+import datetime,os
 
 
 
 #####APP CONFIGS#######
-app=Flask(__name__)
+app=Flask(__name__,template_folder="build/",static_folder="build/static")
 app.config["SECRET_KEY"]="INSPEKTLAB_SECRET_KEY"
+#app.config["TEMPLATE_FOLDER"]=f"../frontend/build"
 limiter = Limiter(
     app,
     key_func=get_remote_address,
@@ -34,16 +35,23 @@ def token_required(f):
 
 
 #######ROUTES##########
-@app.route("/save",methods=["POST"])
+@app.route("/get_file_name",methods=["POST"])
 @cross_origin()
-def f():
+def get_file_name():
     if request.method=="POST":
         if "file" in request.files:
             return request.files["file"].filename
         else:
             return "no file Recieved"
+    return "you made a get request"
 
-@app.route("/login",methods=["POST"])
+@app.route("/",methods=['GET'])
+def home():
+    return render_template("index.html")
+
+
+
+@app.route("/api/login",methods=["POST"])
 def login():
     req_data=request.get_json()
     if req_data['user']=="admin" and req_data['password']=="test":
@@ -51,7 +59,7 @@ def login():
         return jsonify({'token':token.decode("UTF-8")})
     return jsonify({'message':'USERNAME OR PASSWORD INVALID'})
 
-@app.route('/protected',methods=['GET'])
+@app.route('/api/protected',methods=['GET'])
 @token_required
 @limiter.limit("3/minute")
 def protected():
