@@ -1,9 +1,10 @@
 ######IMPORTS######
-from flask import Flask,request,jsonify,render_template
+from types import coroutine
+from flask import Flask,request,jsonify,render_template,make_response,Response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import json,jwt
-from flask_cors import cross_origin
+from flask_cors import cross_origin,CORS
 from functools import wraps
 import datetime,os
 
@@ -18,7 +19,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"]
 )
-
+CORS(app)
 #######UTILS#############
 def token_required(f):
     @wraps(f)
@@ -33,10 +34,18 @@ def token_required(f):
         return f(*args,**kwargs)
     return wrapper 
 
-
+####ERROR HANDLING########
+@cross_origin()
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    print("nadc")
+    response=make_response(jsonify({'data':'too more than 3 requests in a  minute'}),429)
+    response.headers["Access-Control-Allow-Origin"]=""
+    return response
 #######ROUTES##########
 @app.route("/get_file_name",methods=["POST"])
-@cross_origin()
+#@cross_origin()
+@limiter.limit("3 per minute")
 def get_file_name():
     if request.method=="POST":
         if "file" in request.files:
@@ -56,13 +65,13 @@ def login():
     req_data=request.get_json()
     if req_data['user']=="admin" and req_data['password']=="test":
         token=jwt.encode({"user":"admin",'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=30)},app.config["SECRET_KEY"])
-        return jsonify({'token':token.decode("UTF-8")})
+        return jsonify({'token':token.decode("UTF-8")}                                                                                                                                                                                                                                                                                                                                                                      )
     return jsonify({'message':'USERNAME OR PASSWORD INVALID'})
 
 @app.route('/api/protected',methods=['GET'])
 @token_required
 @limiter.limit("3/minute")
-def protected():
+def protected():                                                                                                                                                                                                                                                                                                                                                            
     return jsonify({'message':'THIS IS A PROTECTED METHOD'})
 
 
